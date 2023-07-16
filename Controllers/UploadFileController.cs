@@ -30,77 +30,15 @@ public class UploadFileController : ControllerBase
     {
         _logger.LogInformation("upload called");
        
-        PipeReader pipeReader = PipeReader.Create(file.OpenReadStream());
-        LineRange lineRange = new LineRange();
+        var stream = file.OpenReadStream();
+        
+        HexStreamTransformer hexStreamTransformer = new HexStreamTransformer(stream, partitions);
 
-        string lastLine = "";
-        string[] lines = new string[0];
-        string[] breaks = new string[] { "\r\n", "\r", "\n" };
-        long sectionAddress = 0;
-        ushort crcValue = 0xFFFF; // 用 ushort 因為最大值 0xFFFF，crc16 結果不會超過 0xFFFF
+        FileStream targetStream = System.IO.File.Create("test.hex");
 
-        while(true) {
-            ReadResult result = await pipeReader.ReadAsync();
-            ReadOnlySequence<byte> buffer = result.Buffer;
+        await hexStreamTransformer.pipeToAsync(targetStream);
 
-            if (result.IsCompleted) {
-                break;
-            }
-            
-            lines = (lastLine + Encoding.UTF8.GetString(buffer)).Split(breaks, StringSplitOptions.None);
-
-            lastLine = lines[lines.Length - 1];
-            lines = lines.Take(lines.Length - 1).ToArray();
-
-            foreach (var line in lines) {
-                try
-                {
-                    if(line == "") continue; 
-
-                    byte[] lineBuffer = ByteConvert.convertHexStringToBytes(line.Substring(1));
-                    switch (lineBuffer[3])
-                    {
-                        case 2:
-                            sectionAddress = BinaryPrimitives.ReadUInt16BigEndian(lineBuffer[4..6]) << 4;
-                            break;
-                        case 4:
-                            sectionAddress = BinaryPrimitives.ReadUInt16BigEndian(lineBuffer[4..6]) << 16;
-                            break;
-                        
-                        case 0:
-                            lineRange.startAddress = sectionAddress + BinaryPrimitives.ReadUInt16BigEndian(lineBuffer[1..3]);
-                            lineRange.endAddress = lineRange.startAddress + lineBuffer[0];
-
-                            foreach (Partition partition in partitions)
-                            {
-                                if(partition.endAddress < lineRange.startAddress || partition.startAddress >= lineRange.endAddress) continue;
-
-                                long validStartAddress = Math.Max(partition.startAddress, lineRange.startAddress) - lineRange.startAddress + 4;
-                                long validEndAddress = Math.Min(partition.endAddress + 1, lineRange.endAddress) - lineRange.startAddress + 4;
-
-                                byte[] validData = lineBuffer[(int)validStartAddress..(int)validEndAddress];
-                                string hex = Convert.ToHexString(validData);
-                                
-                                crcValue = Crc16Modbus.ComputeChecksum(validData, crcValue);
-
-                                break;
-                            }
-
-                            break;
-                    }
-                }
-                catch (System.Exception ex)
-                {
-                    throw ex;
-                }
-                
-            }
-
-            // Tell the PipeReader how much of the buffer we have consumed
-            pipeReader.AdvanceTo(buffer.End);
-        } 
-
-        return $"got file: {crcValue}";
+        return $"crc value: {hexStreamTransformer.crcValue}";
     }
 }
 
