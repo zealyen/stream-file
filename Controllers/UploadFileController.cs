@@ -1,7 +1,3 @@
-using System.Buffers;
-using System.Buffers.Binary;
-using System.IO.Pipelines;
-using System.Text;
 using Microsoft.AspNetCore.Mvc;
 
 namespace stream_file.Controllers;
@@ -30,7 +26,7 @@ public class UploadFileController : ControllerBase
     {
         _logger.LogInformation("upload called");
        
-        var stream = file.OpenReadStream();
+        Stream stream = file.OpenReadStream();
         
         HexStreamTransformer hexStreamTransformer = new HexStreamTransformer(stream, partitions);
 

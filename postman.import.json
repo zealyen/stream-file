@@ -1,0 +1,50 @@
+{
+	"info": {
+		"_postman_id": "88cb9fe1-999d-4a27-bb2f-da6adf04b2e8",
+		"name": "dotnet",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "UploadFile",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "multipart/form-data",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": ""
+						},
+						{
+							"key": "partitions",
+							"value": "[{\"startAddress\": 0, \"endAddress\": 4294967295}]",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/UploadFile",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"UploadFile"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

@@ -23,6 +23,10 @@ public class HexStreamTransformer
         _partitions = partitions;
     }
 
+    /*
+    * 只有呼叫這個 method 才會開始讀取 stream，並且把讀到的資料流進 targetStream
+    * 最終 _pipeReader stream 會讀完(流完)，此 stream 會變空，並且關閉
+    */
     public async Task pipeToAsync(Stream targetStream)
     {
         while (true)
@@ -44,6 +48,7 @@ public class HexStreamTransformer
             // 把最後一行拿掉，留到下一次讀取時再處理
             _lines = _lines.Take(_lines.Length - 1).ToArray();
 
+            //原封不動把這次讀到的 buffer 流進 targetStream
             await targetStream.WriteAsync(buffer.ToArray());
 
             foreach (string line in _lines)
