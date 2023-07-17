@@ -1,9 +1,10 @@
 public class LineRange {
-    public long startAddress { get; set;}
-    public long endAddress { get; set;}
+    public uint startAddress { get; set;}
+    public uint endAddress { get; set;}
 }
 
 public class Partition {
-    public long startAddress { get; set;}
-    public long endAddress { get; set;}
+    // 用 uint 是因為 unit32 的最大值是 0xFFFFFFFF
+    public uint startAddress { get; set;}
+    public uint endAddress { get; set;}
 }

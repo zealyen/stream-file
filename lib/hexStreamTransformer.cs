@@ -9,7 +9,7 @@ public class HexStreamTransformer
     private string _lastLine = ""; // 上次讀取時剩下的最後一行
     private string[] _lines = new string[0];
     private string[] _breaks = new string[] { "\r\n", "\r", "\n" };
-    private long _sectionAddress = 0;
+    private uint _sectionAddress = 0;
     private LineRange _lineRange = new LineRange();
     public ushort crcValue = 0xFFFF; // 用 ushort 因為 crc16 結果不會超過 0xFFFF
     private readonly Partition[] _partitions;
@@ -81,10 +81,10 @@ public class HexStreamTransformer
                     switch (lineBuffer[3])
                     {
                         case 2:
-                            _sectionAddress = BinaryPrimitives.ReadUInt16BigEndian(lineBuffer[4..6]) << 4; // 位移 4 bit
+                            _sectionAddress = (uint)BinaryPrimitives.ReadUInt16BigEndian(lineBuffer[4..6]) << 4; // 位移 4 bit
                             break;
                         case 4:
-                            _sectionAddress = BinaryPrimitives.ReadUInt16BigEndian(lineBuffer[4..6]) << 16; // 位移 16 bit = 2 byte
+                            _sectionAddress = (uint)BinaryPrimitives.ReadUInt16BigEndian(lineBuffer[4..6]) << 16; // 位移 16 bit = 2 byte
                             break;
 
                         case 0:
@@ -96,8 +96,9 @@ public class HexStreamTransformer
                                 // 不在 partition 範圍內，跳過
                                 if (partition.endAddress < _lineRange.startAddress || partition.startAddress >= _lineRange.endAddress) continue;
 
-                                long validStartAddress = Math.Max(partition.startAddress, _lineRange.startAddress) - _lineRange.startAddress + 4;
-                                long validEndAddress = Math.Min(partition.endAddress + 1, _lineRange.endAddress) - _lineRange.startAddress + 4;
+                                uint validStartAddress = Math.Max(partition.startAddress, _lineRange.startAddress) - _lineRange.startAddress + 4;
+                                // +1 是因為 endAddress 是包含的，但是我們要的是不包含的，ex: 0x0000 ~ 0x0003，我們要的是 0x0000 ~ 0x0002
+                                uint validEndAddress = Math.Min(partition.endAddress + 1, _lineRange.endAddress) - _lineRange.startAddress + 4;
 
                                 byte[] validData = lineBuffer[(int)validStartAddress..(int)validEndAddress];
                                 string hex = Convert.ToHexString(validData);
