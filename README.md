@@ -2,15 +2,14 @@
 
 ## 簡介
 
-這是一個上傳 hex 檔案，透過 stream & pipe 的概念來計算 crc，並且將檔案存到本地
+這是一個透過 api 上傳 hex 檔案，並利用 stream & pipeline 的概念來計算 crc，並且將檔案存到本地
 
-## requirement
+## 環境需求
 
-* dotnet cli
-* docker (為了避免安裝 .NET Core 6 環境)
-* 若沒有 docker，請到 https://www.docker.com/products/docker-desktop 下載並安裝
+* dotnet cli (使用 .NET Core 6)，若用 docker 就不需要
+* docker，若沒有 docker，請到 https://www.docker.com/products/docker-desktop 下載並安裝
 
-## 執行本地開發環境
+## 執行本地開發環境 (用 docker 啟動 server)
 
 ```bash
 # 將 repo clone 下來
@@ -31,13 +30,13 @@ docker run -d -p 8080:80 stream-file-img
 # 檢查 docker container 是否有建立成功，IMAGE 欄位應該要有 stream-file-img，且 port 應該為 0.0.0.0:8080->80/tcp
 docker ps -a
 
-# 嘗試用網頁連線應該要有資料回傳
+# 嘗試用網頁連線，輸入以下 url 應該要有資料回傳
 http://localhost:8080/api/WeatherForecast/ 
 
-# 嘗試上傳檔案，會再額外提供檔案、postman import json
-帶入的參數 partitions 分為 start, end，可以帶入預設值 startAddress: 0(0x0), endAddress: 4294967295(0xFFFFFFFF)，或是自行帶入
+# 嘗試上傳任一個 hex 檔案，將目錄下的 postman.import.json 匯入 postman，使用 api，並且修改檔案路徑
+api 內的 partitions 欄位為 optional，不帶就計算全部檔案的 crc
 
-# 上傳成功後會回傳 crc 計算結果，以及檔案會儲存在 server 內，透過 docker 指令可以查看到 test.hex
+# 上傳成功後會回傳 crc 計算結果，以及檔案會儲存在 server 內，透過 docker 指令可以查看到 {datetime}.hex
 docker exec -t -i {container id} /bin/bash
 
 ```
