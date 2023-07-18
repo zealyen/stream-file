@@ -18,8 +18,9 @@ git clone git@github.com:zealyen/stream-file.git
 # 進入專案資料夾
 cd stream-file
 
-# run docker
-docker build -t stream-file-img .
+# 建立 docker image，建立完成後會有一個名為 stream-file-img 的 image
+# sh 會進入 image 內的 shell，可以用來檢查 image 內的檔案，離開 shell 請輸入 exit
+docker compose -f docker-build.yml run --rm app sh
 
 # 檢查 docker image 是否有建立成功，REPOSITORY 欄位應該要有 stream-file-img
 docker image ls 
@@ -30,13 +31,14 @@ docker run -d -p 8080:80 stream-file-img
 # 檢查 docker container 是否有建立成功，IMAGE 欄位應該要有 stream-file-img，且 port 應該為 0.0.0.0:8080->80/tcp
 docker ps -a
 
-# 嘗試用網頁連線，輸入以下 url 應該要有資料回傳
-http://localhost:8080/api/WeatherForecast/ 
+# 嘗試用網頁連線，輸入以下 url 應該要有資料回傳：["value1","value2"]
+http://localhost:8080/api/UploadFile/ 
 
 # 嘗試上傳任一個 hex 檔案，將目錄下的 postman.import.json 匯入 postman，使用 api，並且修改檔案路徑
 api 內的 partitions 欄位為 optional，不帶就計算全部檔案的 crc
 
 # 上傳成功後會回傳 crc 計算結果，以及檔案會儲存在 server 內，透過 docker 指令可以查看到 {datetime}.hex
-docker exec -t -i {container id} /bin/bash
+# sh 會進入 container 內的 shell，檔案放在 upload-files 資料夾內，離開 shell 請輸入 exit
+docker exec -t -i {container id} sh
 
 ```

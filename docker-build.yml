@@ -1,0 +1,6 @@
+services:
+  app:
+    image: stream-file-img:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
