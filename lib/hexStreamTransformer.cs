@@ -29,27 +29,32 @@ public class HexStreamTransformer
     */
     public async Task pipeToAsync(Stream targetStream)
     {
+        ReadResult result;
+        ReadOnlySequence<byte> buffer = new ReadOnlySequence<byte>();
         while (true)
         {
-            ReadResult result = await _pipeReader.ReadAsync();
-            ReadOnlySequence<byte> buffer = result.Buffer;
-
-            // 檢查是否已經讀完
-            if (result.IsCompleted)
-            {
-                break;
-            }
+            result = await _pipeReader.ReadAsync();
+            buffer = result.Buffer;
 
             // 把 buffer 轉成 string，蒐集每一行 hex string
             // 把上次剩下的最後一行加上這次讀到的 buffer，再用 \r\n \r \n 切開
             _lines = (_lastLine + Encoding.UTF8.GetString(buffer)).Split(_breaks, StringSplitOptions.None);
-            // 最後一行可能不完整，先留著
-            _lastLine = _lines[_lines.Length - 1];
-            // 把最後一行拿掉，留到下一次讀取時再處理
-            _lines = _lines.Take(_lines.Length - 1).ToArray();
+
+            // 類似 flush 的概念，檢查 buffer 是否有剩下的資料，如果沒有就把最後一行清空
+            if(buffer.Length == 0)
+            {
+                _lastLine = "";
+            }
+            else {
+                // 最後一行可能不完整，先留著
+                _lastLine = _lines[_lines.Length - 1];
+                // 把最後一行拿掉，留到下一次讀取時再處理
+                _lines = _lines.Take(_lines.Length - 1).ToArray();
+            }
 
             //原封不動把這次讀到的 buffer 流進 targetStream
             await targetStream.WriteAsync(buffer.ToArray());
+            
 
             foreach (string line in _lines)
             {
@@ -118,9 +123,20 @@ public class HexStreamTransformer
                 }
             }
 
+            // 檢查是否已經讀完
+            if (result.IsCompleted)
+            {
+                break;
+            }
+
             // 紀錄讀取進度，下一個 ReadAsync 會從這裡開始讀
             // block by block 讀取，不會有 memory 不足的問題
             _pipeReader.AdvanceTo(buffer.End);
         }
+
+        // 確認讀取完畢，並且把 stream 關閉，這樣最後一個 buffer 才會被釋放，寫入 targetStream
+        await _pipeReader.CompleteAsync();
+        // 關閉 targetStream
+        targetStream.Close();
     }
 }
