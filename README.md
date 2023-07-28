@@ -1,8 +1,10 @@
-# .NET Core 6 File Upload Stream
+# .NET Core 6 File Upload With Stream Pipeline
 
 ## 簡介
 
-這是一個透過 api 上傳 hex 檔案，並利用 stream & pipeline 的概念來計算 crc，並且將檔案存到本地
+* 這是一個透過 api 上傳 hex 檔案，依據 partitions 資料取得有效資料，並且計算 crc 的專案
+* 利用 stream pipeline 的概念來節省記憶體，透過 transformer 計算 crc，並且將檔案由 target stream 存到本地
+* 透過 docker 啟動 server，並且透過 postman 來測試 api
 
 ## 環境需求
 
